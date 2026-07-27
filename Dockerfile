@@ -49,6 +49,13 @@ COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm ci --no-audit --no-fund || npm install --no-audit --no-fund
 
 COPY frontend/ ./
+# Defensive: if a node_modules dir from the build context ever slips in
+# (e.g. via a missing .dockerignore) it can overwrite the freshly
+# installed node_modules and strip the exec bit off local binaries like
+# react-scripts, causing "Permission denied" / exit code 126. Re-assert
+# executable permissions before building to guard against that.
+RUN chmod -R +x node_modules/.bin 2>/dev/null || true
+
 # REACT_APP_API_URL defaults to "/api" in the app code, which is exactly
 # where Nginx proxies to below, so no build-time env var is required.
 RUN npm run build
