@@ -46,7 +46,10 @@ FROM node:20-alpine AS frontend-build
 WORKDIR /frontend
 
 COPY frontend/package.json frontend/package-lock.json* ./
-RUN npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+# Using `npm install` (not `npm ci`) because it tolerates a
+# package-lock.json that's slightly out of sync with package.json —
+# it will just update the lock file instead of hard-failing.
+RUN npm install --no-audit --no-fund
 
 COPY frontend/ ./
 # Defensive: if a node_modules dir from the build context ever slips in
